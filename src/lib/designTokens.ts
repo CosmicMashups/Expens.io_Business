@@ -1,0 +1,47 @@
+export const tokens = {
+  colors: {
+    bgBase: '#0B0C10',
+    bgSurface: '#12151C',
+    bgElevated: '#1A1E2A',
+    bgCard: '#181C27',
+    border: '#1F2535',
+    borderSubtle: '#252B3B',
+    accentPrimary: '#0099FF',
+    accentSecondary: '#00E0D3',
+    accentPrimaryMuted: 'rgba(0,153,255,0.12)',
+    success: '#22C55E',
+    successMuted: 'rgba(34,197,94,0.12)',
+    warning: '#F59E0B',
+    warningMuted: 'rgba(245,158,11,0.12)',
+    danger: '#EF4444',
+    dangerMuted: 'rgba(239,68,68,0.12)',
+    textPrimary: '#F0F4FF',
+    textSecondary: '#8892A4',
+    textTertiary: '#4B5563',
+    navActive: '#0099FF',
+    navDefault: '#6B7280',
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '20px',
+    '2xl': '24px',
+  },
+  font: {
+    display: "'Syne', sans-serif",
+    body: "'Manrope', sans-serif",
+    mono: "'JetBrains Mono', monospace",
+  },
+} as const
+
+export const chartPalette = [
+  '#0099FF',
+  '#00E0D3',
+  '#22C55E',
+  '#F59E0B',
+  '#A855F7',
+  '#F97316',
+  '#EC4899',
+  '#06B6D4',
+]

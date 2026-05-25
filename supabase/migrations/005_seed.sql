@@ -1,0 +1,28 @@
+-- Migration 005 -- Manual owner setup (no automated seed data)
+-- ============================================================
+-- This migration intentionally contains NO executable SQL.
+-- Follow these steps after running migrations 001-004:
+--
+-- 1. Create the initial Owner account via Supabase Auth dashboard
+--    (Authentication > Users > Add user) or sign up through the app.
+--
+-- 2. The handle_new_user trigger (004) auto-creates a user_profiles row
+--    with role = 'guest' for every new auth.users record.
+--
+-- 3. Promote that user to owner manually in the SQL editor:
+--
+--    UPDATE user_profiles
+--    SET role = 'owner'
+--    WHERE email = 'your-owner@example.com';
+--
+-- 4. Verify:
+--
+--    SELECT id, full_name, email, role, is_active
+--    FROM user_profiles
+--    WHERE role = 'owner';
+--
+-- 5. Configure Supabase Auth (Email+Password and/or Google OAuth) before
+--    inviting other users. Only owner and developer roles can change
+--    user roles via Admin > Users (enforced by is_admin_role() RLS).
+--
+-- expense_categories and app_settings are seeded in migration 001.
