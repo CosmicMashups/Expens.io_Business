@@ -28,5 +28,9 @@ export function usePayrollMutations() {
         payrollService.setLocked(id, locked),
       onSuccess: invalidate,
     }),
+    bulkInsert: useMutation({
+      mutationFn: (rows: Partial<Payroll>[]) => payrollService.bulkInsert(rows),
+      onSuccess: invalidate,
+    }),
   }
 }

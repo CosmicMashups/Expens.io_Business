@@ -37,6 +37,24 @@ export const projectMonitoringService = {
     return data as ProjectMonitoringReport
   },
 
+  async bulkInsert(rows: Partial<ProjectMonitoringReport>[]) {
+    const cleaned = rows.map((row) => {
+      const { profit: _p, balance_to_be_collected: _b, _project_name, ...rest } = row as Partial<
+        ProjectMonitoringReport
+      > & { _project_name?: string }
+      void _p
+      void _b
+      void _project_name
+      return rest
+    })
+    const { data, error } = await supabase
+      .from('project_monitoring_reports')
+      .insert(cleaned)
+      .select()
+    if (error) throw error
+    return data as ProjectMonitoringReport[]
+  },
+
   async update(id: string, values: Partial<ProjectMonitoringReport>) {
     const { profit: _p, balance_to_be_collected: _b, ...rest } = values
     void _p

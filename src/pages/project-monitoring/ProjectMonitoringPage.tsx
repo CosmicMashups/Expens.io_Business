@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/shell/PageHeader'
 import { useProjectMonitoring, useProjectMonitoringMutations } from '@/hooks/useProjectMonitoring'
 import { PermissionGuard } from '@/components/shared/PermissionGuard'
@@ -9,9 +10,9 @@ import { EmptyState } from '@/components/feedback/EmptyState'
 import { Button } from '@/components/ui/button'
 import { selectClass } from '@/lib/uiClasses'
 import { exportProjectMonitoring } from '@/services/excel/exporter'
-import { importProjectMonitoring } from '@/services/excel/importer'
+import { commitPmrImport } from '@/services/excel/importOrchestrator'
 import { projectsService } from '@/services/projects'
-import { projectMonitoringService } from '@/services/projectMonitoring'
+import { formatImportSummary } from '@/lib/bulkChunk'
 import { formatPeso } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -78,6 +79,7 @@ function MonitoringCard({
 export function ProjectMonitoringPage() {
   const [year, setYear] = useState(new Date().getFullYear())
   const { data: reports = [], isLoading } = useProjectMonitoring(year)
+  const qc = useQueryClient()
   const { aggregateYear } = useProjectMonitoringMutations()
   const [updating, setUpdating] = useState(false)
   const [selected, setSelected] = useState<ProjectMonitoringReport | null>(null)
@@ -88,27 +90,14 @@ export function ProjectMonitoringPage() {
   }
 
   const handleImport = async (file: File) => {
-    const results = await importProjectMonitoring(file)
-    const projects = await projectsService.list()
-    let n = 0
-    for (const r of results) {
-      for (const row of r.valid) {
-        const name = row._project_name ?? row.report_description ?? ''
-        const proj =
-          projects.find((p) => p.project_name.toLowerCase() === name.toLowerCase()) ??
-          projects.find((p) => p.project_id.toLowerCase() === name.toLowerCase())
-        if (proj && row.report_id) {
-          await projectMonitoringService.create({
-            ...row,
-            project_id: proj.id,
-            profit: undefined,
-            balance_to_be_collected: undefined,
-          } as never)
-          n++
-        }
-      }
+    try {
+      const projects = await projectsService.list()
+      const { imported, skipped, skippedTags } = await commitPmrImport(file, projects)
+      if (imported > 0) await qc.invalidateQueries({ queryKey: ['project-monitoring'] })
+      toast.success(formatImportSummary(imported, skipped, skippedTags))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Import failed')
     }
-    toast.success(`Imported ${n} reports`)
   }
 
   const handleUpdateExpenses = async () => {

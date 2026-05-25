@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/shell/PageHeader'
 import { useDailyExpenses, useDailyExpenseMutations } from '@/hooks/useDailyExpenses'
 import { useRole } from '@/hooks/useRole'
@@ -15,7 +16,9 @@ import { CurrencyInput } from '@/components/forms/CurrencyInput'
 import { VAT_RATE_OPTIONS } from '@/lib/constants'
 import { selectClass } from '@/lib/uiClasses'
 import { exportDailyExpenses } from '@/services/excel/exporter'
-import { importDailyExpenses } from '@/services/excel/importer'
+import { commitDailyImport } from '@/services/excel/importOrchestrator'
+import { projectsService } from '@/services/projects'
+import { formatImportSummary } from '@/lib/bulkChunk'
 import { formatDate, formatPeso } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Plus, Upload, Download } from 'lucide-react'
@@ -30,6 +33,7 @@ export function DailyExpensesPage() {
     projectId: filters.projectId || undefined,
     category: filters.category || undefined,
   })
+  const qc = useQueryClient()
   const { create, remove } = useDailyExpenseMutations()
   const { permissions } = useRole()
   const [showForm, setShowForm] = useState(false)
@@ -58,20 +62,25 @@ export function DailyExpensesPage() {
   }
 
   const handleImport = async (file: File) => {
-    if (!form.project_id && !filters.projectId) {
-      toast.error('Select a project for import')
-      return
-    }
-    const pid = filters.projectId || form.project_id
-    const results = await importDailyExpenses(file, pid, filters.year)
-    let count = 0
-    for (const r of results) {
-      for (const row of r.valid) {
-        await create.mutateAsync({ ...row, project_id: pid } as never)
-        count++
+    try {
+      const projects = await projectsService.list()
+      const overrideId = filters.projectId || form.project_id || undefined
+      const { imported, skipped, skippedTags } = await commitDailyImport(
+        file,
+        projects,
+        filters.year,
+        overrideId,
+      )
+      if (imported > 0) {
+        await qc.invalidateQueries({ queryKey: ['daily-expenses'] })
       }
+      toast.success(formatImportSummary(imported, skipped, skippedTags))
+      if (imported === 0 && skipped > 0) {
+        toast.error('No rows imported. Create projects matching column H tags or select a default project.')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Import failed')
     }
-    toast.success(`Imported ${count} rows`)
   }
 
   return (
@@ -142,6 +151,9 @@ export function DailyExpensesPage() {
             onChange={(id) => setFilters((f) => ({ ...f, projectId: id }))}
           />
         </div>
+        <p className="w-full text-xs text-text-tertiary">
+          Import matches column H (project tag) to projects. Optional filter sets default for rows without a tag.
+        </p>
       </div>
 
       {showForm && permissions.canCreate && (

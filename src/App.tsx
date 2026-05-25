@@ -30,6 +30,9 @@ const ProjectExpensesPage = lazy(() =>
   import('@/pages/project-expenses/ProjectExpensesPage').then((m) => ({ default: m.ProjectExpensesPage })),
 )
 const PayrollPage = lazy(() => import('@/pages/payroll/PayrollPage').then((m) => ({ default: m.PayrollPage })))
+const MigrationPage = lazy(() =>
+  import('@/pages/migration/MigrationPage').then((m) => ({ default: m.MigrationPage })),
+)
 const ApprovalQueuePage = lazy(() =>
   import('@/pages/approvals/ApprovalQueuePage').then((m) => ({ default: m.ApprovalQueuePage })),
 )
@@ -161,6 +164,16 @@ export default function App() {
               <Wrapped>
                 <PayrollPage />
               </Wrapped>
+            }
+          />
+          <Route
+            path="migration"
+            element={
+              <PermissionGuard require="canCreate">
+                <Wrapped>
+                  <MigrationPage />
+                </Wrapped>
+              </PermissionGuard>
             }
           />
           <Route

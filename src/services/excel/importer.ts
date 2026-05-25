@@ -18,8 +18,8 @@ import {
   pmrHeaderToColumn,
 } from '@/lib/excelLayouts'
 
-async function readWorkbook(file: File) {
-  const buffer = await file.arrayBuffer()
+async function readWorkbook(file: File | ArrayBuffer) {
+  const buffer = file instanceof File ? await file.arrayBuffer() : file
   return XLSX.read(buffer, { type: 'array', cellDates: true })
 }
 

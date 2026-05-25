@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "audit:excel": "node scripts/audit-excel-samples.mjs"
+    "audit:excel": "node scripts/audit-excel-samples.mjs",
+    "migrate:excel": "node scripts/migrate-from-excel.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -49,6 +50,7 @@
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~6.0.2",
+    "tsx": "^4.21.0",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
   }

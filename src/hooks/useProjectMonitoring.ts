@@ -31,5 +31,10 @@ export function useProjectMonitoringMutations() {
       mutationFn: (year: number) => projectMonitoringService.aggregateAllForYear(year),
       onSuccess: invalidate,
     }),
+    bulkInsert: useMutation({
+      mutationFn: (rows: Partial<ProjectMonitoringReport>[]) =>
+        projectMonitoringService.bulkInsert(rows),
+      onSuccess: invalidate,
+    }),
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/shell/PageHeader'
 import { useProjectExpenses, useProjectExpenseMutations } from '@/hooks/useProjectExpenses'
 import { useRole } from '@/hooks/useRole'
@@ -13,8 +14,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { selectClass } from '@/lib/uiClasses'
 import { exportProjectExpenses } from '@/services/excel/exporter'
-import { importProjectExpenses } from '@/services/excel/importer'
+import { commitProjectExpensesImport } from '@/services/excel/importOrchestrator'
 import { projectsService } from '@/services/projects'
+import { formatImportSummary } from '@/lib/bulkChunk'
 import { formatDate, formatPeso } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Plus, Download, Upload } from 'lucide-react'
@@ -28,6 +30,7 @@ export function ProjectExpensesPage() {
     year: filterYear,
     projectId: projectId || undefined,
   })
+  const qc = useQueryClient()
   const { create, remove } = useProjectExpenseMutations()
   const { permissions } = useRole()
   const [selected, setSelected] = useState<ProjectExpense | null>(null)
@@ -51,20 +54,14 @@ export function ProjectExpensesPage() {
   }
 
   const handleImport = async (file: File) => {
-    const projects = await projectsService.list()
-    const bySheet: Record<string, string> = {}
-    for (const p of projects) bySheet[p.project_id] = p.id
-    const results = await importProjectExpenses(file, bySheet)
-    let n = 0
-    for (const r of results) {
-      for (const row of r.valid) {
-        if (row.project_id) {
-          await create.mutateAsync(row)
-          n++
-        }
-      }
+    try {
+      const projects = await projectsService.list()
+      const { imported, skipped, skippedTags } = await commitProjectExpensesImport(file, projects)
+      if (imported > 0) await qc.invalidateQueries({ queryKey: ['project-expenses'] })
+      toast.success(formatImportSummary(imported, skipped, skippedTags))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Import failed')
     }
-    toast.success(`Imported ${n} rows`)
   }
 
   return (

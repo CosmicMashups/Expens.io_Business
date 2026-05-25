@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/shell/PageHeader'
 import { usePayroll, usePayrollMutations } from '@/hooks/usePayroll'
 import { useRole } from '@/hooks/useRole'
@@ -9,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { selectClass, filterChipClass } from '@/lib/uiClasses'
 import { PAYROLL_PERIOD_COLUMNS, type PayrollPeriodKeys } from '@/types'
 import { exportPayroll } from '@/services/excel/exporter'
-import { importPayroll } from '@/services/excel/importer'
+import { commitPayrollImport } from '@/services/excel/importOrchestrator'
 import { projectsService } from '@/services/projects'
+import { formatImportSummary } from '@/lib/bulkChunk'
 import { formatPeso } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Download, Upload, LayoutGrid, Table } from 'lucide-react'
@@ -20,7 +22,8 @@ export function PayrollPage() {
   const [workerFilter, setWorkerFilter] = useState<'all' | 'employee' | 'organization'>('all')
   const [view, setView] = useState<'grid' | 'summary'>('grid')
   const { data: rows = [], isLoading } = usePayroll(year, projectId || undefined)
-  const { updatePeriod, create } = usePayrollMutations()
+  const qc = useQueryClient()
+  const { updatePeriod } = usePayrollMutations()
   const { permissions } = useRole()
   const [editing, setEditing] = useState<{ id: string; key: keyof PayrollPeriodKeys } | null>(null)
   const [editVal, setEditVal] = useState(0)
@@ -33,20 +36,14 @@ export function PayrollPage() {
   }
 
   const handleImport = async (file: File) => {
-    const results = await importPayroll(file)
-    const projects = await projectsService.list()
-    let n = 0
-    for (const r of results) {
-      for (const row of r.valid) {
-        const code = row.worker_name ?? ''
-        const proj = projects.find((p) => p.project_id.toLowerCase() === code.toLowerCase())
-        if (proj) {
-          await create.mutateAsync({ ...row, project_id: proj.id })
-          n++
-        }
-      }
+    try {
+      const projects = await projectsService.list()
+      const { imported, skipped, skippedTags } = await commitPayrollImport(file, projects)
+      if (imported > 0) await qc.invalidateQueries({ queryKey: ['payroll'] })
+      toast.success(formatImportSummary(imported, skipped, skippedTags))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Import failed')
     }
-    toast.success(`Imported ${n} payroll rows`)
   }
 
   const saveCell = async () => {

@@ -46,6 +46,9 @@ npm run dev
 - `npm run dev` — local dev server
 - `npm run build` — production build to `dist/`
 - `npm run audit:excel` — verify sample workbook structure in `src/assets/sample/`
+- `npm run migrate:excel` — CLI bulk import (see [docs/IMPORT_RUNBOOK.md](docs/IMPORT_RUNBOOK.md))
+
+In the app: **Finance → Data Migration** imports all four legacy files with preview.
 
 ## Excel parity
 

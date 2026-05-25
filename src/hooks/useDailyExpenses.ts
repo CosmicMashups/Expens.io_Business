@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dailyExpensesService, type DailyExpenseFilters } from '@/services/dailyExpenses'
-import type { DailyExpenseFormValues } from '@/types'
+import type { DailyExpense, DailyExpenseFormValues } from '@/types'
 
 export function useDailyExpenses(filters: DailyExpenseFilters) {
   return useQuery({
@@ -26,6 +26,10 @@ export function useDailyExpenseMutations() {
     }),
     remove: useMutation({
       mutationFn: (id: string) => dailyExpensesService.softDelete(id),
+      onSuccess: invalidate,
+    }),
+    bulkInsert: useMutation({
+      mutationFn: (rows: Partial<DailyExpense>[]) => dailyExpensesService.bulkInsert(rows),
       onSuccess: invalidate,
     }),
   }

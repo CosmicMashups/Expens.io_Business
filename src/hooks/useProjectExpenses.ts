@@ -27,5 +27,9 @@ export function useProjectExpenseMutations() {
       mutationFn: (id: string) => projectExpensesService.softDelete(id),
       onSuccess: invalidate,
     }),
+    bulkInsert: useMutation({
+      mutationFn: (rows: Partial<ProjectExpense>[]) => projectExpensesService.bulkInsert(rows),
+      onSuccess: invalidate,
+    }),
   }
 }

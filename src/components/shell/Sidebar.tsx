@@ -9,6 +9,7 @@ import {
   CheckSquare,
   ClipboardList,
   Settings,
+  FileUp,
   PanelLeftClose,
   PanelLeft,
 } from 'lucide-react'
@@ -19,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/brand/Logo'
 import type { LucideIcon } from 'lucide-react'
 
-type PermissionKey = 'canApprove' | 'canViewAudit' | 'canConfigureSettings'
+type PermissionKey = 'canApprove' | 'canViewAudit' | 'canConfigureSettings' | 'canCreate'
 
 const navGroups: {
   label: string
@@ -38,6 +39,7 @@ const navGroups: {
       { to: '/daily-expenses', icon: Receipt, label: 'Daily Expenses' },
       { to: '/project-expenses', icon: FolderOpen, label: 'Project Expenses' },
       { to: '/payroll', icon: Users, label: 'Payroll' },
+      { to: '/migration', icon: FileUp, label: 'Data Migration', permission: 'canCreate' },
     ],
   },
   {
