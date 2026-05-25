@@ -51,6 +51,13 @@ npm run dev
 
 Sample workbooks in `src/assets/sample/` drive import/export layouts:
 
+- `Daily Expenses Report.xlsx`
+- `Project Expenses Report.xlsx`
+- `Payroll Summary.xlsx`
+- `Project Monitoring Report.xlsx`
+
+End-user documentation: [docs/USER_MANUAL.md](docs/USER_MANUAL.md).
+
 - Daily Expenses — single sheet, `DATE` / `CASH OUT` headers
 - Payroll — `PAYROLL SUMMARY` 3-row header with pay dates
 - Project Expenses — positional columns per project sheet
