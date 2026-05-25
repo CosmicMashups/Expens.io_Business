@@ -5,7 +5,7 @@ import { AppShell } from '@/components/shell/AppShell'
 import { PermissionGuard } from '@/components/shared/PermissionGuard'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary'
-import { LoadingSkeleton } from '@/components/feedback/LoadingSkeleton'
+import { PageFallback } from '@/components/feedback/PageFallback'
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })))
 const DashboardPage = lazy(() =>
@@ -39,14 +39,6 @@ const ApprovalQueuePage = lazy(() =>
 const AuditLogsPage = lazy(() => import('@/pages/audit/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage })))
 const AdminPage = lazy(() => import('@/pages/admin/AdminPage').then((m) => ({ default: m.AdminPage })))
 
-function PageFallback() {
-  return (
-    <div className="p-8">
-      <LoadingSkeleton variant="kpi" count={3} />
-    </div>
-  )
-}
-
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuthStore()
   if (isLoading) {
@@ -61,11 +53,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function Wrapped({ children }: { children: React.ReactNode }) {
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<PageFallback />}>{children}</Suspense>
-    </ErrorBoundary>
-  )
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }
 
 export default function App() {
@@ -80,9 +68,11 @@ export default function App() {
         <Route
           path="/login"
           element={
-            <Wrapped>
-              <LoginPage />
-            </Wrapped>
+            <ErrorBoundary>
+              <Suspense fallback={<PageFallback />}>
+                <LoginPage />
+              </Suspense>
+            </ErrorBoundary>
           }
         />
         <Route

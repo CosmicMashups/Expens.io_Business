@@ -27,7 +27,8 @@ export function ProjectDetailPage() {
   const { id } = useParams()
   const year = new Date().getFullYear()
   const [tab, setTab] = useState<string>('overview')
-  const { data: project, isLoading } = useProject(id)
+  const { data: project, isPending, isFetching, isError } = useProject(id)
+  const loading = isPending && isFetching
   const { data: daily = [] } = useDailyExpenses({ projectId: id, year })
   const { data: pe = [] } = useProjectExpenses({ projectId: id, year })
   const { data: payroll = [] } = usePayroll(year, id)
@@ -38,10 +39,20 @@ export function ProjectDetailPage() {
   const peTotal = pe.reduce((s, e) => s + e.cash_out, 0)
   const payrollTotal = payroll.reduce((s, p) => s + p.total_payroll, 0)
 
-  if (isLoading || !project) {
+  if (loading) {
     return (
       <div className="px-4 py-8 md:px-8">
         <LoadingSkeleton variant="kpi" count={3} />
+      </div>
+    )
+  }
+
+  if (isError || !project) {
+    return (
+      <div className="px-4 py-8 md:px-8">
+        <p className="text-sm text-text-secondary">
+          {isError ? 'Unable to load this project.' : 'Project not found.'}
+        </p>
       </div>
     )
   }

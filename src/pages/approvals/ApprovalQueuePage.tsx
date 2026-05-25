@@ -14,10 +14,22 @@ type Tab = 'all' | 'pending' | 'approved' | 'rejected'
 
 export function ApprovalQueuePage() {
   const [tab, setTab] = useState<Tab>('pending')
-  const { data: allItems = [], isLoading: allLoading } = useApprovalQueue()
-  const { data: pendingItems = [] } = useApprovalQueue('pending')
-  const { data: approvedItems = [] } = useApprovalQueue('approved')
-  const { data: rejectedItems = [] } = useApprovalQueue('rejected')
+  const { data: allItems = [], isPending: allPending, isFetching: allFetching } = useApprovalQueue()
+  const {
+    data: pendingItems = [],
+    isPending: pendingPending,
+    isFetching: pendingFetching,
+  } = useApprovalQueue('pending')
+  const {
+    data: approvedItems = [],
+    isPending: approvedPending,
+    isFetching: approvedFetching,
+  } = useApprovalQueue('approved')
+  const {
+    data: rejectedItems = [],
+    isPending: rejectedPending,
+    isFetching: rejectedFetching,
+  } = useApprovalQueue('rejected')
   const review = useReviewApproval()
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -30,7 +42,14 @@ export function ApprovalQueuePage() {
           ? approvedItems
           : rejectedItems
 
-  const isLoading = tab === 'all' ? allLoading : false
+  const tabLoading =
+    tab === 'all'
+      ? allPending && allFetching
+      : tab === 'pending'
+        ? pendingPending && pendingFetching
+        : tab === 'approved'
+          ? approvedPending && approvedFetching
+          : rejectedPending && rejectedFetching
 
   const counts = {
     all: allItems.length,
@@ -80,7 +99,7 @@ export function ApprovalQueuePage() {
         onTabChange={(t) => setTab(t as Tab)}
       />
 
-      {isLoading ? (
+      {tabLoading ? (
         <LoadingSkeleton variant="card" count={3} />
       ) : items.length === 0 ? (
         <EmptyState
